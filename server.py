@@ -32,7 +32,7 @@ def get_percent_changes(currency_id):
 
 
 def should_i_know(p_change):
-    if p_change['1h'] > 1 or p_change['24h'] > 5 or p_change['7d'] > 20:
+    if abs(p_change['1h']) > 1 or abs(p_change['24h']) > 5 or abs(p_change['7d']) > 20:
         return True
     return False
 
@@ -42,8 +42,12 @@ def send_email(p_change):
     sender = 'muchprivacy@tuta.io'
     client = boto3.client('ses')
     charset = "UTF-8"
-    subject = f"{p_change['currency']} Much Substantial! So time to act!"
-    body_text = (json.dumps(p_change, indent=2)
+    subject = f"Much Substantial! So time to act!"
+    body_text = (f"""{p_change['currency']}\n
+                 Changes in percent:
+                 1h: {p_change['1h']}
+                 24h: {p_change['24h']}
+                 7d: {p_change['7d']}"""
                  )
     try:
         response = client.send_email(
