@@ -31,8 +31,8 @@ def get_percent_changes(currency_id):
     return changes
 
 
-def should_i_know(p_change):
-    if abs(p_change['1h']) > 1 or abs(p_change['24h']) > 5 or abs(p_change['7d']) > 20:
+def should_i_know(p_change, modifier=1):
+    if abs(p_change['1h']) > 1 * modifier or abs(p_change['24h']) > 5 * modifier or abs(p_change['7d']) > 20 * modifier:
         return True
     return False
 
@@ -45,9 +45,9 @@ def send_email(p_change):
     subject = f"Much Substantial! So time to act!"
     body_text = (f"""{p_change['currency']}\n
                  Changes in percent:
-                 1h: {p_change['1h']}
-                 24h: {p_change['24h']}
-                 7d: {p_change['7d']}"""
+                 1h - {p_change['1h']}
+                 24h - {p_change['24h']}
+                 7d - {p_change['7d']}"""
                  )
     try:
         response = client.send_email(
@@ -75,13 +75,13 @@ def send_email(p_change):
         print(response['ResponseMetadata']['RequestId'])
 
 
+def serve_alerts(id, modificator):
+    percent_change = get_percent_changes(id)
+    if should_i_know(percent_change):
+        percent_change['currency'] = id
+        send_email(percent_change)
+
+
 def lambda_handler(event, context):
-    ids = ['bitcoin', 'ethereum']
-    changes = []
-    for id in ids:
-        percent_change = get_percent_changes(id)
-        if should_i_know(percent_change):
-            percent_change['currency'] = id
-            send_email(percent_change)
-        changes.append(percent_change)
-    return changes
+    serve_alerts('bitcoin')
+    serve_alerts('ethereum', modificator=1.5)
