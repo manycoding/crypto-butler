@@ -31,12 +31,6 @@ def get_percent_changes(currency_id):
     return changes
 
 
-def should_i_know(p_change, modifier=1):
-    if abs(p_change['1h']) > 1 * modifier or abs(p_change['24h']) > 5 * modifier or abs(p_change['7d']) > 20 * modifier:
-        return True
-    return False
-
-
 def send_email(p_change):
     to = 'muchprivacy@tuta.io'
     sender = 'muchprivacy@tuta.io'
@@ -75,13 +69,19 @@ def send_email(p_change):
         print(response['ResponseMetadata']['RequestId'])
 
 
-def serve_alerts(id, modificator):
+def should_i_know(p_change, modifier):
+    if abs(p_change['1h']) > 10 * modifier or abs(p_change['24h']) > 25 * modifier or abs(p_change['7d']) > 50 * modifier:
+        return True
+    return False
+
+
+def serve_alerts(id, modifier=1):
     percent_change = get_percent_changes(id)
-    if should_i_know(percent_change):
+    if should_i_know(percent_change, modifier):
         percent_change['currency'] = id
         send_email(percent_change)
 
 
 def lambda_handler(event, context):
     serve_alerts('bitcoin')
-    serve_alerts('ethereum', modificator=1.5)
+    serve_alerts('ethereum', modifier=1.5)
